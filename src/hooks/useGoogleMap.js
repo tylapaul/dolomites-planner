@@ -13,7 +13,7 @@ function loadGoogleMaps() {
   return new Promise((res, rej) => {
     callbacks.push(res);
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places,directions`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&loading=async`;
     script.async = true;
     script.onload = () => {
       isLoaded = true;
