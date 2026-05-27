@@ -184,6 +184,47 @@ export const RESTAURANTS = {
   },
 };
 
+
+export const CAR_RENTAL = {
+  company: "Ecovia",
+  brand: "Autovia",
+  car: "Audi A3 Sportback (arba panašus)",
+  class: "Intermediate · Automatinė pavarų dėžė",
+  pickup: { date: "06.14", time: "14:30" },
+  dropoff: { date: "06.18", time: "18:30" },
+  bookingRef: "734670081",
+  address: "Via Noalese, 63E, Treviso, Italy, 31100",
+  coords: { lat: 45.6535, lng: 12.1938 },
+  pickupGuide: "Nusileidus Trevizo oro uoste (TSF) ir išėjus iš pagrindinio terminalo pastato, jokio šatlo (shuttle bus) ieškoti nereikia. Biuras ir automobilių aikštelė yra įsikūrę tiesiai kitoje gatvės pusėje, vos už kelių dešimčių metrų nuo terminalo išėjimo (adresu Via Noalese 63E). Pėsčiomis su bagažu nukeliausite per 1–2 minutes.",
+};
+
+export const TRE_CIME_RESERVATION = {
+  url: "https://pass.auronzo.info/",
+  price: 40,
+  hours: 12,
+  notice: "Kadangi automobilis yra nuomojamas, rezervaciją sistemoje atlikite dabar nenaudodami valstybinio numerio (palikite laukelį tuščią). Pasiėmus automobilį birželio 14 d. 14:30, jo valstybinį numerį (Targa) privaloma rankiniu būdu suvesti į sistemą likus ne mažiau kaip 1 dienai iki įvažiavimo (iki birželio 15 d. 23:59 val.).",
+};
+
+export const TRE_CIME_TRANSPORT = {
+  byCar: {
+    id: "car",
+    label: "🚗 Savo automobiliu",
+    parkingCoords: { lat: 46.6124, lng: 12.2964 },
+    parkingCost: 40,
+    parkingLabel: "Rifugio Auronzo aikštelė",
+  },
+  byBus: {
+    id: "bus",
+    label: "🚌 Kilti autobusu",
+    parkingCoords: { lat: 46.5828, lng: 12.2547 },
+    parkingCost: 14,
+    parkingLabel: "Misurina Genzianella aikštelė",
+    shuttleCostPerPerson: 15,
+    persons: 4,
+    shuttleUrl: "https://dolomitibus.it/",
+    shuttleNote: "Autobusas Misurina → Rifugio Auronzo ir atgal",
+  },
+};
 export const BRUNCH_SPOT = {
   name: 'Bar Pasticceria Fiori',
   emoji: '☕',
