@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { TOWNS, NIGHT_ONE, FLIGHTS, generateDayPlans, POIS, RESTAURANTS, BRUNCH_SPOT, RIFUGIO, CAR_RENTAL, TRE_CIME_RESERVATION, TRE_CIME_TRANSPORT } from '../data/tripData.js';
+import { useTripContext } from '../context/TripContext.jsx';
+import { TOWNS, NIGHT_ONE, generateDayPlans, RESTAURANTS, BRUNCH_SPOT, RIFUGIO, CAR_RENTAL, TRE_CIME_RESERVATION, TRE_CIME_TRANSPORT } from '../data/tripData.js';
+import LockReservation from './LockReservation.jsx';
+import RoutingEngine from './RoutingEngine.jsx';
 
 function StrategyToggle({ strategy, setStrategy }) {
   return (
@@ -19,14 +22,25 @@ function StrategyToggle({ strategy, setStrategy }) {
   );
 }
 
-function TownSelector({ selectedTown, onTownSelect }) {
-  const town = TOWNS.find((t) => t.id === selectedTown);
+function TownSelector() {
+  const { state, dispatch } = useTripContext();
+  const night15 = state.nights['06.15'];
+  const isLocked = night15?.is_locked;
+  const selectedTownId = isLocked ? night15.accommodation_id : null;
+  const town = TOWNS.find((t) => t.id === selectedTownId);
+
+  if (isLocked) return null;
+
   return (
     <div className="town-selector">
       <div className="section-label">Pasirinkite miestelį</div>
       <div className="towns-grid">
         {TOWNS.map((t) => (
-          <div key={t.id} className={`town-card ${selectedTown === t.id ? 'selected' : ''}`} onClick={() => onTownSelect(t.id)}>
+          <div
+            key={t.id}
+            className={`town-card ${state.activeTown === t.id ? 'selected' : ''}`}
+            onClick={() => dispatch({ type: 'SET_ACTIVE_TOWN', payload: t.id })}
+          >
             <div>
               <div className="town-name">{t.name}</div>
               <div className="town-tag">{t.tag}</div>
@@ -35,9 +49,13 @@ function TownSelector({ selectedTown, onTownSelect }) {
           </div>
         ))}
       </div>
-      {town && (
-        <a href={town.bookingUrl} target="_blank" rel="noopener noreferrer" className="booking-link">
-          🏨 Ieškoti būsto Booking.com → {town.name} (4 asm., 06.15–06.18)
+      {state.activeTown && (
+        <a
+          href={TOWNS.find(t => t.id === state.activeTown)?.bookingUrl}
+          target="_blank" rel="noopener noreferrer"
+          className="booking-link"
+        >
+          🏨 Ieškoti būsto Booking.com → {TOWNS.find(t => t.id === state.activeTown)?.name}
         </a>
       )}
     </div>
@@ -49,9 +67,9 @@ function ParkingAlert({ parking, poiName }) {
   return (
     <div className={`parking-alert ${parking.urgent ? 'urgent' : ''}`}>
       <div className="parking-title">{parking.urgent ? '🚨' : '🅿️'} Parkavimas · {poiName}</div>
-      <div className="parking-row"><span>Kaina:</span> <span>{parking.cost}</span></div>
-      <div className="parking-row"><span>Taisyklė:</span> <span>{parking.rule}</span></div>
-      {parking.note && <div className="parking-row"><span>Pastaba:</span> <span style={{ color: parking.urgent ? 'var(--danger)' : 'var(--warn)' }}>{parking.note}</span></div>}
+      <div className="parking-row"><span>Kaina:</span><span>{parking.cost}</span></div>
+      <div className="parking-row"><span>Taisyklė:</span><span>{parking.rule}</span></div>
+      {parking.note && <div className="parking-row"><span>Pastaba:</span><span style={{ color: parking.urgent ? 'var(--danger)' : 'var(--warn)' }}>{parking.note}</span></div>}
     </div>
   );
 }
@@ -102,36 +120,32 @@ function TreCimeReservationCard({ transport, setTransport }) {
 
   return (
     <div style={{ marginBottom: 12 }}>
-      {/* Transport toggle */}
       <div className="strategy-toggle" style={{ marginBottom: 10 }}>
         <div className="strategy-label">Transportas iki Tre Cime</div>
         <div className="strategy-btns">
           <button className={`strat-btn ${!isBus ? 'active' : ''}`} onClick={() => setTransport('car')}>
             <div className="strat-btn-title">🚗 Savo auto</div>
-            <div className="strat-btn-desc">Iki Rifugio Auronzo aikštelės. Kaina: 40€.</div>
+            <div className="strat-btn-desc">Iki Rifugio Auronzo. Kaina: 40€.</div>
           </button>
           <button className={`strat-btn ${isBus ? 'active' : ''}`} onClick={() => setTransport('bus')}>
             <div className="strat-btn-title">🚌 Autobusu</div>
-            <div className="strat-btn-desc">Auto iki Misurinos, toliau šatlu. Kaina: ~{busData.parkingCost + shuttleTotal}€.</div>
+            <div className="strat-btn-desc">Misurina + šatlas. ~{busData.parkingCost + shuttleTotal}€.</div>
           </button>
         </div>
       </div>
 
-      {/* Cost summary */}
       <div className="parking-alert" style={{ borderColor: isBus ? 'rgba(79,163,224,0.4)' : 'var(--border)' }}>
-        <div className="parking-title" style={{ color: isBus ? 'var(--ice)' : 'var(--gold)' }}>
-          💶 Išlaidų suvestinė · Tre Cime
-        </div>
+        <div className="parking-title" style={{ color: isBus ? 'var(--ice)' : 'var(--gold)' }}>💶 Išlaidų suvestinė · Tre Cime</div>
         {isBus ? (
           <>
             <div className="parking-row"><span>🅿️ Misurina aikštelė:</span><span>{busData.parkingCost}€</span></div>
-            <div className="parking-row"><span>🚌 Šatlas (4 asm. × {busData.shuttleCostPerPerson}€):</span><span>{shuttleTotal}€</span></div>
+            <div className="parking-row"><span>🚌 Šatlas (4 × {busData.shuttleCostPerPerson}€):</span><span>{shuttleTotal}€</span></div>
             <div className="parking-row" style={{ borderTop: '1px solid var(--border)', marginTop: 4, paddingTop: 4 }}>
               <span style={{ color: 'var(--snow)', fontWeight: 500 }}>Iš viso:</span>
               <span style={{ color: 'var(--gold)', fontWeight: 500 }}>{totalCost}€</span>
             </div>
             <a href={busData.shuttleUrl} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'block', marginTop: 8, textAlign: 'center', background: 'rgba(79,163,224,0.12)', border: '1px solid rgba(79,163,224,0.3)', borderRadius: 6, padding: '6px', color: 'var(--ice)', textDecoration: 'none', fontSize: '0.75rem' }}>
+              style={{ display: 'block', marginTop: 8, textAlign: 'center', background: 'rgba(79,163,224,0.12)', border: '1px solid rgba(79,163,224,0.3)', borderRadius: 6, padding: 6, color: 'var(--ice)', textDecoration: 'none', fontSize: '0.75rem' }}>
               🕐 Tvarkaraštis → dolomitibus.it
             </a>
           </>
@@ -143,14 +157,11 @@ function TreCimeReservationCard({ transport, setTransport }) {
         )}
       </div>
 
-      {/* Reservation card */}
       <div className="parking-alert urgent" style={{ borderColor: 'rgba(224,138,82,0.5)' }}>
         <div className="parking-title" style={{ color: 'var(--warn)' }}>⚠️ Privaloma rezervacija iš anksto</div>
-        <div style={{ fontSize: '0.77rem', color: 'var(--text)', lineHeight: 1.6, marginBottom: 8 }}>
-          {TRE_CIME_RESERVATION.notice}
-        </div>
+        <div style={{ fontSize: '0.77rem', color: 'var(--text)', lineHeight: 1.6, marginBottom: 8 }}>{TRE_CIME_RESERVATION.notice}</div>
         <a href={TRE_CIME_RESERVATION.url} target="_blank" rel="noopener noreferrer"
-          style={{ display: 'block', textAlign: 'center', background: 'rgba(224,138,82,0.15)', border: '1px solid rgba(224,138,82,0.4)', borderRadius: 6, padding: '8px', color: 'var(--warn)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 500 }}>
+          style={{ display: 'block', textAlign: 'center', background: 'rgba(224,138,82,0.15)', border: '1px solid rgba(224,138,82,0.4)', borderRadius: 6, padding: 8, color: 'var(--warn)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 500 }}>
           🎫 Rezervuoti leidimą → pass.auronzo.info
         </a>
       </div>
@@ -158,7 +169,9 @@ function TreCimeReservationCard({ transport, setTransport }) {
   );
 }
 
-function BirthdayCard({ number, restaurant, isBrunch }) {
+function BirthdayCard({ number, selectedTown, isBrunch }) {
+  const isCortina = selectedTown === 'cortina';
+  const restaurant = isCortina ? RESTAURANTS.nearCortina : RESTAURANTS.nearCadore;
   if (isBrunch) {
     return (
       <div className="birthday-card">
@@ -191,23 +204,17 @@ function BirthdayCard({ number, restaurant, isBrunch }) {
   );
 }
 
-function FlightInfo() {
+function Day14Panel() {
   return (
     <div>
-      <div className="section-label">Skrydžiai ir logistika</div>
+      <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-dim)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+        Skrydžiai ir logistika <span style={{ flex: 1, height: 1, background: 'var(--border)', display: 'inline-block' }}/>
+      </div>
       <div className="flight-card">
         <div className="flight-row"><span className="flight-label">✈️ Atvykimas</span><span className="flight-value gold">06.14 · 13:55 TSF</span></div>
         <div className="flight-row"><span className="flight-label">✈️ Išskridimas (2 asm.)</span><span className="flight-value">06.18 · 20:40 TSF</span></div>
         <div className="flight-row"><span className="flight-label">🚂 Venecija (2 asm.)</span><span className="flight-value">06.18–06.20 · Mestre</span></div>
       </div>
-    </div>
-  );
-}
-
-function Day14Panel() {
-  return (
-    <div>
-      <FlightInfo />
       <div style={{ borderTop: '1px solid var(--border)', margin: '14px 0' }} />
       <div className="section-label">Automobilio nuoma</div>
       <CarRentalCard />
@@ -220,7 +227,7 @@ function Day14Panel() {
       <div className="events-list">
         {[
           { time: '13:55', icon: '✈️', text: 'Nusileidimas Trevize (TSF)' },
-          { time: '14:30', icon: '🚗', text: 'Ecovia biuras – Via Noalese 63E (2 min. pėsčiomis nuo terminalo)' },
+          { time: '14:30', icon: '🚗', text: 'Ecovia biuras – Via Noalese 63E (2 min. pėsčiomis)' },
           { time: '15:15', icon: '🏰', text: 'Atvykimas į Castello di Roncade (~25 min.)' },
           { time: '18:00', icon: '🍷', text: 'Vyno degustacija pilies vynuogyne' },
           { time: '20:00', icon: '🍝', text: 'Vakarienė vietiniame restorane' },
@@ -236,19 +243,23 @@ function Day14Panel() {
   );
 }
 
-function DayPlanPanel({ day, selectedTown, onFlyTo, transport, setTransport }) {
-  const plans = selectedTown ? generateDayPlans(selectedTown) : null;
+function DayPlanPanel({ day, onFlyTo, transport, setTransport }) {
+  const { state } = useTripContext();
+  const dateKey = `06.${String(day).padStart(2, '0')}`;
+  const night = state.nights[dateKey];
+  const isLocked = night?.is_locked;
+  const townId = isLocked ? night.accommodation_id : state.activeTown;
+  const selectedTown = townId;
+
+  const plans = townId ? generateDayPlans(townId) : null;
   const plan = plans?.find((p) => p.day === day);
-  const town = TOWNS.find((t) => t.id === selectedTown);
-  const isCortina = selectedTown === 'cortina';
-  const restaurant = isCortina ? RESTAURANTS.nearCortina : RESTAURANTS.nearCadore;
 
   if (!plan) {
     return (
       <div className="no-selection">
         <div className="big-icon">👆</div>
         <h3>Pasirinkite miestelį</h3>
-        <p>Pasirinkite nakvynės vietą aukščiau, kad pamatytumėte dienos planą su maršrutais ir rekomendacijomis.</p>
+        <p>Pasirinkite nakvynės vietą aukščiau, kad pamatytumėte dienos planą.</p>
       </div>
     );
   }
@@ -260,8 +271,12 @@ function DayPlanPanel({ day, selectedTown, onFlyTo, transport, setTransport }) {
           <div className="day-plan-title">{plan.title}</div>
           <div style={{ fontSize: '0.73rem', color: 'var(--text-dim)', marginTop: 2 }}>{plan.date}</div>
         </div>
+        {isLocked && <span className="badge badge-fixed" style={{ marginLeft: 'auto' }}>🔒 Rezervuota</span>}
         {plan.type === 'birthday' && <span className="badge badge-birthday">Gimtadienis</span>}
       </div>
+
+      {/* Routing engine - shows departure times if locked */}
+      <RoutingEngine day={day} />
 
       <div className="events-list">
         {plan.events.map((e, i) => (
@@ -273,22 +288,20 @@ function DayPlanPanel({ day, selectedTown, onFlyTo, transport, setTransport }) {
         ))}
       </div>
 
-      {/* Day 16 – Tre Cime special module */}
       {day === 16 && (
         <div style={{ marginTop: 12 }}>
           <TreCimeReservationCard transport={transport} setTransport={setTransport} />
         </div>
       )}
 
-      {/* Other days parking */}
       {day !== 16 && plan.parking && (
         <div style={{ marginTop: 12 }}>
           <ParkingAlert parking={plan.parking} poiName={plan.poi?.name} />
         </div>
       )}
 
-      {day === 16 && <BirthdayCard number={1} restaurant={restaurant} isBrunch={false} />}
-      {day === 17 && <BirthdayCard number={2} isBrunch={true} />}
+      {day === 16 && <BirthdayCard number={1} selectedTown={selectedTown} isBrunch={false} />}
+      {day === 17 && <BirthdayCard number={2} selectedTown={selectedTown} isBrunch={true} />}
 
       {plan.poi && (
         <button
@@ -296,7 +309,7 @@ function DayPlanPanel({ day, selectedTown, onFlyTo, transport, setTransport }) {
           style={{ background: 'var(--bg3)', color: 'var(--gold)', border: '1px solid var(--border)', marginTop: 6 }}
           onClick={() => onFlyTo(day === 16 && transport === 'bus' ? TRE_CIME_TRANSPORT.byBus.parkingCoords : plan.poi.coords)}
         >
-          🗺️ Rodyti žemėlapyje → {day === 16 && transport === 'bus' ? 'Misurina aikštelė' : plan.poi.name}
+          🗺️ Rodyti žemėlapyje → {day === 16 && transport === 'bus' ? 'Misurina' : plan.poi.name}
         </button>
       )}
     </div>
@@ -308,31 +321,27 @@ function VenicePanel() {
     <div>
       <div className="castle-card" style={{ borderColor: 'rgba(79,163,224,0.35)', background: 'linear-gradient(135deg, rgba(26,58,92,0.4), rgba(26,37,64,0.5))' }}>
         <div className="castle-name">🚢 Venecija pratęsimas</div>
-        <div className="castle-desc">2 asmenys lieka Venecijoje iki birželio 20 d. Susitikimo taškas – Venezia Mestre geležinkelio stotis.</div>
-        <div className="castle-detail" style={{ color: 'var(--ice)' }}>🚂 Venezia Mestre → Venezia Santa Lucia (~10 min.)</div>
+        <div className="castle-desc">2 asmenys lieka Venecijoje iki birželio 20 d.</div>
+        <div className="castle-detail" style={{ color: 'var(--ice)' }}>🚂 Venezia Mestre → Santa Lucia (~10 min.)</div>
       </div>
-      {[
-        { icon: '🚢', text: 'Gondolų kanalas · Rialto tiltas · San Marco aikštė' },
-        { icon: '🏛️', text: 'Dožų rūmai · Gallerie dell\'Accademia' },
-        { icon: '🏝️', text: 'Murano sala (stiklo dirbtuvės) · Burano (spalvotos nameliai)' },
-        { icon: '🍽️', text: 'Cicchetti ir Spritz – tikras venetiškas vakaras' },
-      ].map((e, i) => (
+      {['🚢 Gondolų kanalas · Rialto tiltas · San Marco', '🏛️ Dožų rūmai · Gallerie dell\'Accademia', '🏝️ Murano sala · Burano (spalvotos nameliai)', '🍽️ Cicchetti ir Spritz – tikras venetiškas vakaras'].map((t, i) => (
         <div key={i} className="event-row" style={{ marginTop: 4 }}>
-          <span className="event-icon" style={{ gridColumn: '2' }}>{e.icon}</span>
-          <span className="event-text" style={{ gridColumn: '3' }}>{e.text}</span>
+          <span className="event-icon" style={{ gridColumn: 2 }}>{t.slice(0, 2)}</span>
+          <span className="event-text" style={{ gridColumn: 3 }}>{t.slice(3)}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function ExportButton({ selectedTown, transport }) {
-  const town = TOWNS.find((t) => t.id === selectedTown);
+function ExportButton({ transport }) {
+  const { state } = useTripContext();
+  const night = state.nights['06.15'];
+  const townId = night?.is_locked ? night.accommodation_id : state.activeTown;
+  const town = TOWNS.find((t) => t.id === townId);
   if (!town) return null;
   const isBus = transport === 'bus';
-  const trecimeStop = isBus
-    ? '46.5828,12.2547' // Misurina
-    : '46.6124,12.2964'; // Rifugio Auronzo
+  const trecimeStop = isBus ? '46.5828,12.2547' : '46.6124,12.2964';
   const url = `https://www.google.com/maps/dir/${encodeURIComponent(town.name + ', Italy')}/${trecimeStop}/46.5181,12.0374`;
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
@@ -341,38 +350,77 @@ function ExportButton({ selectedTown, transport }) {
   );
 }
 
-export default function Sidebar({ strategy, setStrategy, selectedTown, onTownSelect, activeDay, onFlyTo }) {
+export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo }) {
   const [transport, setTransport] = useState('car');
+  const { state } = useTripContext();
   const showVenice = activeDay === 19 || activeDay === 20;
   const show14 = activeDay === 14;
+  const night15 = state.nights['06.15'];
+  const isAnythingLocked = night15?.is_locked;
+  const townId = isAnythingLocked ? night15.accommodation_id : state.activeTown;
 
   return (
     <aside className="sidebar">
       <div className="sidebar-scroll">
-        {!show14 && !showVenice && activeDay <= 18 && (
+
+        {/* Day 14 */}
+        {show14 && <Day14Panel />}
+
+        {/* Venice */}
+        {showVenice && <VenicePanel />}
+
+        {/* Planning days 15-17 */}
+        {!show14 && !showVenice && activeDay <= 17 && (
           <>
-            <StrategyToggle strategy={strategy} setStrategy={setStrategy} />
-            <TownSelector selectedTown={selectedTown} onTownSelect={onTownSelect} />
+            {/* Strategy toggle only if not locked */}
+            {!isAnythingLocked && <StrategyToggle strategy={strategy} setStrategy={setStrategy} />}
+
+            {/* Town selector (hidden when locked) */}
+            <TownSelector />
+
+            {/* Lock reservation card */}
+            <LockReservation activeDay={activeDay} />
+
             <div style={{ borderTop: '1px solid var(--border)', margin: '14px 0' }} />
+
+            {/* Day plan */}
+            <DayPlanPanel
+              day={activeDay}
+              onFlyTo={onFlyTo}
+              transport={transport}
+              setTransport={setTransport}
+            />
           </>
         )}
 
-        {show14 && <Day14Panel />}
-        {showVenice && <VenicePanel />}
-
-        {!show14 && !showVenice && activeDay <= 18 && (
-          <DayPlanPanel
-            day={activeDay}
-            selectedTown={selectedTown}
-            onFlyTo={onFlyTo}
-            transport={transport}
-            setTransport={setTransport}
-          />
+        {/* Day 18 - departure */}
+        {activeDay === 18 && (
+          <div>
+            <div className="castle-card" style={{ borderColor: 'rgba(201,168,76,0.3)' }}>
+              <div className="castle-name">✈️ Išvykimo diena</div>
+              <div className="castle-desc">Paskutiniai pusryčiai Dolomituose, išsiregistravimas.</div>
+            </div>
+            {[
+              { time: '09:00', icon: '🌄', text: 'Paskutiniai pusryčiai Dolomituose' },
+              { time: '10:00', icon: '🏨', text: 'Išsiregistravimas' },
+              { time: '10:30', icon: '🚗', text: 'Išvykimas į Trevizo / Veneciją (~2.5 val.)' },
+              { time: '13:00', icon: '🚂', text: '2 asm. → Venezia Mestre' },
+              { time: '17:30', icon: '🚗', text: '2 asm. → TSF oro uostas' },
+              { time: '18:30', icon: '🚗', text: 'Automobilio grąžinimas Ecovia (užsakymas #734670081)' },
+              { time: '20:40', icon: '✈️', text: 'Skrydis atgal iš TSF' },
+            ].map((e, i) => (
+              <div key={i} className="event-row">
+                <span className="event-time">{e.time}</span>
+                <span className="event-icon">{e.icon}</span>
+                <span className="event-text">{e.text}</span>
+              </div>
+            ))}
+          </div>
         )}
 
-        {selectedTown && !show14 && !showVenice && (
-          <ExportButton selectedTown={selectedTown} transport={transport} />
-        )}
+        {/* Export button */}
+        {!show14 && !showVenice && activeDay <= 17 && <ExportButton transport={transport} />}
+
       </div>
     </aside>
   );

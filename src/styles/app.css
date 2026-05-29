@@ -516,3 +516,76 @@ body {
   .main-layout { grid-template-columns: 1fr; grid-template-rows: 50vh 1fr; }
   .header-meta { display: none; }
 }
+
+/* ---- LOCK RESERVATION CARD ---- */
+.lock-card {
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.lock-card.unlocked {
+  background: var(--bg3);
+  border: 1px dashed rgba(201,168,76,0.4);
+}
+
+.lock-card.locked {
+  background: linear-gradient(135deg, rgba(45,90,61,0.25), rgba(26,37,64,0.4));
+  border: 1px solid rgba(82,168,121,0.5);
+}
+
+.lock-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.lock-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+
+.lock-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--snow);
+}
+
+.lock-coords {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lock-times {
+  font-size: 0.72rem;
+  color: var(--success);
+  margin-top: 3px;
+}
+
+.unlock-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(224,82,82,0.3);
+  border-radius: 8px;
+  padding: 7px;
+  color: var(--danger);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.unlock-btn:hover {
+  background: rgba(224,82,82,0.1);
+  border-color: var(--danger);
+}
+
+/* Input styles for lock form */
+input::placeholder { color: var(--text-dim); }
+input:focus {
+  outline: none;
+  border-color: var(--gold) !important;
+}
+select:focus { outline: none; border-color: var(--gold) !important; }
+select option { background: #1a2540; color: var(--text); }
