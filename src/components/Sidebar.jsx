@@ -26,11 +26,44 @@ function TownSelector() {
   const { state, dispatch } = useTripContext();
   const night15 = state.nights['06.15'];
   const isLocked = night15?.is_locked;
-  const selectedTownId = isLocked ? night15.accommodation_id : null;
-  const town = TOWNS.find((t) => t.id === selectedTownId);
 
-  if (isLocked) return null;
+  // If locked – show confirmed card with booking link + unlock
+  if (isLocked) {
+    const town = TOWNS.find((t) => t.id === night15.accommodation_id);
+    return (
+      <div className="town-selector">
+        <div className="section-label">Nakvynės vieta</div>
+        {/* Locked summary */}
+        <div className="lock-card locked" style={{ marginBottom: 8 }}>
+          <div className="lock-header">
+            <span className="lock-icon">🔒</span>
+            <div style={{ flex: 1 }}>
+              <div className="lock-name">{night15.emoji} {night15.accommodation_name}</div>
+              <div className="lock-coords">
+                📍 {night15.coordinates?.lat?.toFixed(4)}, {night15.coordinates?.lng?.toFixed(4)}
+              </div>
+              <div className="lock-times">✅ Birž. 15–18 · Įsiregistravimas: 15:00 · Išsiregistravimas: 10:00</div>
+            </div>
+            <span className="badge badge-fixed" style={{ flexShrink: 0 }}>Patvirtinta</span>
+          </div>
+          <button
+            className="unlock-btn"
+            onClick={() => dispatch({ type: 'UNLOCK_NIGHT', payload: { date: '06.15' } })}
+          >
+            🔓 Atrakinti / Keisti rezervaciją
+          </button>
+        </div>
+        {/* Booking link still visible */}
+        {town && (
+          <a href={town.bookingUrl} target="_blank" rel="noopener noreferrer" className="booking-link">
+            🏨 Peržiūrėti Booking.com → {night15.accommodation_name}
+          </a>
+        )}
+      </div>
+    );
+  }
 
+  // Not locked – show town picker
   return (
     <div className="town-selector">
       <div className="section-label">Pasirinkite miestelį</div>
@@ -50,13 +83,17 @@ function TownSelector() {
         ))}
       </div>
       {state.activeTown && (
-        <a
-          href={TOWNS.find(t => t.id === state.activeTown)?.bookingUrl}
-          target="_blank" rel="noopener noreferrer"
-          className="booking-link"
-        >
-          🏨 Ieškoti būsto Booking.com → {TOWNS.find(t => t.id === state.activeTown)?.name}
-        </a>
+        <>
+          <a
+            href={TOWNS.find(t => t.id === state.activeTown)?.bookingUrl}
+            target="_blank" rel="noopener noreferrer"
+            className="booking-link"
+          >
+            🏨 Ieškoti būsto Booking.com → {TOWNS.find(t => t.id === state.activeTown)?.name}
+          </a>
+          {/* Lock reservation always visible when town selected */}
+          <LockReservation />
+        </>
       )}
     </div>
   );
@@ -116,7 +153,6 @@ function TreCimeReservationCard({ transport, setTransport }) {
   const isBus = transport === 'bus';
   const busData = TRE_CIME_TRANSPORT.byBus;
   const shuttleTotal = busData.shuttleCostPerPerson * busData.persons;
-  const totalCost = isBus ? (busData.parkingCost + shuttleTotal) : TRE_CIME_TRANSPORT.byCar.parkingCost;
 
   return (
     <div style={{ marginBottom: 12 }}>
@@ -125,7 +161,7 @@ function TreCimeReservationCard({ transport, setTransport }) {
         <div className="strategy-btns">
           <button className={`strat-btn ${!isBus ? 'active' : ''}`} onClick={() => setTransport('car')}>
             <div className="strat-btn-title">🚗 Savo auto</div>
-            <div className="strat-btn-desc">Iki Rifugio Auronzo. Kaina: 40€.</div>
+            <div className="strat-btn-desc">Rifugio Auronzo. Kaina: 40€.</div>
           </button>
           <button className={`strat-btn ${isBus ? 'active' : ''}`} onClick={() => setTransport('bus')}>
             <div className="strat-btn-title">🚌 Autobusu</div>
@@ -133,7 +169,6 @@ function TreCimeReservationCard({ transport, setTransport }) {
           </button>
         </div>
       </div>
-
       <div className="parking-alert" style={{ borderColor: isBus ? 'rgba(79,163,224,0.4)' : 'var(--border)' }}>
         <div className="parking-title" style={{ color: isBus ? 'var(--ice)' : 'var(--gold)' }}>💶 Išlaidų suvestinė · Tre Cime</div>
         {isBus ? (
@@ -142,7 +177,7 @@ function TreCimeReservationCard({ transport, setTransport }) {
             <div className="parking-row"><span>🚌 Šatlas (4 × {busData.shuttleCostPerPerson}€):</span><span>{shuttleTotal}€</span></div>
             <div className="parking-row" style={{ borderTop: '1px solid var(--border)', marginTop: 4, paddingTop: 4 }}>
               <span style={{ color: 'var(--snow)', fontWeight: 500 }}>Iš viso:</span>
-              <span style={{ color: 'var(--gold)', fontWeight: 500 }}>{totalCost}€</span>
+              <span style={{ color: 'var(--gold)', fontWeight: 500 }}>{busData.parkingCost + shuttleTotal}€</span>
             </div>
             <a href={busData.shuttleUrl} target="_blank" rel="noopener noreferrer"
               style={{ display: 'block', marginTop: 8, textAlign: 'center', background: 'rgba(79,163,224,0.12)', border: '1px solid rgba(79,163,224,0.3)', borderRadius: 6, padding: 6, color: 'var(--ice)', textDecoration: 'none', fontSize: '0.75rem' }}>
@@ -156,7 +191,6 @@ function TreCimeReservationCard({ transport, setTransport }) {
           </>
         )}
       </div>
-
       <div className="parking-alert urgent" style={{ borderColor: 'rgba(224,138,82,0.5)' }}>
         <div className="parking-title" style={{ color: 'var(--warn)' }}>⚠️ Privaloma rezervacija iš anksto</div>
         <div style={{ fontSize: '0.77rem', color: 'var(--text)', lineHeight: 1.6, marginBottom: 8 }}>{TRE_CIME_RESERVATION.notice}</div>
@@ -207,9 +241,7 @@ function BirthdayCard({ number, selectedTown, isBrunch }) {
 function Day14Panel() {
   return (
     <div>
-      <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-dim)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-        Skrydžiai ir logistika <span style={{ flex: 1, height: 1, background: 'var(--border)', display: 'inline-block' }}/>
-      </div>
+      <div className="section-label">Skrydžiai ir logistika</div>
       <div className="flight-card">
         <div className="flight-row"><span className="flight-label">✈️ Atvykimas</span><span className="flight-value gold">06.14 · 13:55 TSF</span></div>
         <div className="flight-row"><span className="flight-label">✈️ Išskridimas (2 asm.)</span><span className="flight-value">06.18 · 20:40 TSF</span></div>
@@ -249,7 +281,6 @@ function DayPlanPanel({ day, onFlyTo, transport, setTransport }) {
   const night = state.nights[dateKey];
   const isLocked = night?.is_locked;
   const townId = isLocked ? night.accommodation_id : state.activeTown;
-  const selectedTown = townId;
 
   const plans = townId ? generateDayPlans(townId) : null;
   const plan = plans?.find((p) => p.day === day);
@@ -259,7 +290,7 @@ function DayPlanPanel({ day, onFlyTo, transport, setTransport }) {
       <div className="no-selection">
         <div className="big-icon">👆</div>
         <h3>Pasirinkite miestelį</h3>
-        <p>Pasirinkite nakvynės vietą aukščiau, kad pamatytumėte dienos planą.</p>
+        <p>Pasirinkite nakvynės vietą ir patvirtinkite rezervaciją, kad pamatytumėte dienos planą su tiksliais maršrutais.</p>
       </div>
     );
   }
@@ -271,11 +302,13 @@ function DayPlanPanel({ day, onFlyTo, transport, setTransport }) {
           <div className="day-plan-title">{plan.title}</div>
           <div style={{ fontSize: '0.73rem', color: 'var(--text-dim)', marginTop: 2 }}>{plan.date}</div>
         </div>
-        {isLocked && <span className="badge badge-fixed" style={{ marginLeft: 'auto' }}>🔒 Rezervuota</span>}
-        {plan.type === 'birthday' && <span className="badge badge-birthday">Gimtadienis</span>}
+        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {isLocked && <span className="badge badge-fixed">🔒 Rezervuota</span>}
+          {plan.type === 'birthday' && <span className="badge badge-birthday">🎂 Gimtadienis</span>}
+        </div>
       </div>
 
-      {/* Routing engine - shows departure times if locked */}
+      {/* Dynamic routing – only when locked */}
       <RoutingEngine day={day} />
 
       <div className="events-list">
@@ -300,8 +333,8 @@ function DayPlanPanel({ day, onFlyTo, transport, setTransport }) {
         </div>
       )}
 
-      {day === 16 && <BirthdayCard number={1} selectedTown={selectedTown} isBrunch={false} />}
-      {day === 17 && <BirthdayCard number={2} selectedTown={selectedTown} isBrunch={true} />}
+      {day === 16 && <BirthdayCard number={1} selectedTown={townId} isBrunch={false} />}
+      {day === 17 && <BirthdayCard number={2} selectedTown={townId} isBrunch={true} />}
 
       {plan.poi && (
         <button
@@ -355,35 +388,19 @@ export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo }) {
   const { state } = useTripContext();
   const showVenice = activeDay === 19 || activeDay === 20;
   const show14 = activeDay === 14;
-  const night15 = state.nights['06.15'];
-  const isAnythingLocked = night15?.is_locked;
-  const townId = isAnythingLocked ? night15.accommodation_id : state.activeTown;
 
   return (
     <aside className="sidebar">
       <div className="sidebar-scroll">
 
-        {/* Day 14 */}
         {show14 && <Day14Panel />}
-
-        {/* Venice */}
         {showVenice && <VenicePanel />}
 
-        {/* Planning days 15-17 */}
         {!show14 && !showVenice && activeDay <= 17 && (
           <>
-            {/* Strategy toggle only if not locked */}
-            {!isAnythingLocked && <StrategyToggle strategy={strategy} setStrategy={setStrategy} />}
-
-            {/* Town selector (hidden when locked) */}
+            <StrategyToggle strategy={strategy} setStrategy={setStrategy} />
             <TownSelector />
-
-            {/* Lock reservation card */}
-            <LockReservation activeDay={activeDay} />
-
             <div style={{ borderTop: '1px solid var(--border)', margin: '14px 0' }} />
-
-            {/* Day plan */}
             <DayPlanPanel
               day={activeDay}
               onFlyTo={onFlyTo}
@@ -393,12 +410,11 @@ export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo }) {
           </>
         )}
 
-        {/* Day 18 - departure */}
         {activeDay === 18 && (
           <div>
             <div className="castle-card" style={{ borderColor: 'rgba(201,168,76,0.3)' }}>
               <div className="castle-name">✈️ Išvykimo diena</div>
-              <div className="castle-desc">Paskutiniai pusryčiai Dolomituose, išsiregistravimas.</div>
+              <div className="castle-desc">Paskutiniai pusryčiai Dolomituose, išsiregistravimas ir grįžimas.</div>
             </div>
             {[
               { time: '09:00', icon: '🌄', text: 'Paskutiniai pusryčiai Dolomituose' },
@@ -406,7 +422,7 @@ export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo }) {
               { time: '10:30', icon: '🚗', text: 'Išvykimas į Trevizo / Veneciją (~2.5 val.)' },
               { time: '13:00', icon: '🚂', text: '2 asm. → Venezia Mestre' },
               { time: '17:30', icon: '🚗', text: '2 asm. → TSF oro uostas' },
-              { time: '18:30', icon: '🚗', text: 'Automobilio grąžinimas Ecovia (užsakymas #734670081)' },
+              { time: '18:30', icon: '🚗', text: 'Automobilio grąžinimas Ecovia (užs. #734670081)' },
               { time: '20:40', icon: '✈️', text: 'Skrydis atgal iš TSF' },
             ].map((e, i) => (
               <div key={i} className="event-row">
@@ -418,9 +434,7 @@ export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo }) {
           </div>
         )}
 
-        {/* Export button */}
         {!show14 && !showVenice && activeDay <= 17 && <ExportButton transport={transport} />}
-
       </div>
     </aside>
   );
