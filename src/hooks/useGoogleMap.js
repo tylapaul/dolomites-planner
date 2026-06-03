@@ -12,16 +12,20 @@ function loadGoogleMaps() {
   isLoading = true;
   return new Promise((res, rej) => {
     callbacks.push(res);
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&loading=async`;
-    script.async = true;
-    script.onload = () => {
+    window.initGoogleMapsCallback = () => {
       isLoaded = true;
       isLoading = false;
       callbacks.forEach((cb) => cb());
       callbacks.length = 0;
+      delete window.initGoogleMapsCallback;
     };
-    script.onerror = rej;
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&loading=async&callback=initGoogleMapsCallback`;
+    script.async = true;
+    script.onerror = (err) => {
+      isLoading = false;
+      rej(err);
+    };
     document.head.appendChild(script);
   });
 }
@@ -92,7 +96,7 @@ export function useGoogleMap(containerRef, initialCenter) {
     const dr = new window.google.maps.DirectionsRenderer({
       map: mapRef.current,
       suppressMarkers: true,
-      polylineOptions: { strokeColor: '#c9a84c', strokeWeight: 3, strokeOpacity: 0.8 },
+      polylineOptions: { strokeColor: '#e05252', strokeWeight: 4, strokeOpacity: 0.8 },
     });
     ds.route(
       {

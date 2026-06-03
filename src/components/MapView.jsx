@@ -64,7 +64,7 @@ function poiInfoHTML(poi) {
   </div>`;
 }
 
-export default function MapView({ activeDay, mapFocus }) {
+export default function MapView({ activeDay, mapFocus, className = '' }) {
   const containerRef = useRef(null);
   const { state } = useTripContext();
   const { getMap, ready, clearMarkers, addMarker, panTo, drawRoute } = useGoogleMap(
@@ -116,7 +116,6 @@ export default function MapView({ activeDay, mapFocus }) {
           <span style="font-size:12px;color:#555">✅ Patvirtinta nakvynė · ${dateKey}</span></div>`,
       });
       m.addListener('click', () => iw.open({ anchor: m, map }));
-      if (dayPois.length > 0) drawRoute(night.coordinates, dayPois[0].coords);
     }
 
     // ── Selected user hotel ───────────────────────────────────────
@@ -125,8 +124,29 @@ export default function MapView({ activeDay, mapFocus }) {
       if (hotel?.lat && hotel?.lng) {
         const icon = createSvgMarker('📌 ' + hotel.name.split(' ').slice(0, 2).join(' '), '#e65100');
         new window.google.maps.Marker({ position: { lat: hotel.lat, lng: hotel.lng }, map, title: hotel.name, icon, zIndex: 25 });
-        if (dayPois.length > 0) drawRoute({ lat: hotel.lat, lng: hotel.lng }, dayPois[0].coords);
       }
+    }
+
+    // ── Draw route (Priority: Selected Hotel > Locked Hotel > Active Town) ──
+    let routeOrigin = null;
+    if (state.selectedHotelId) {
+      const hotel = (state.myHotels || []).find(h => h.id === state.selectedHotelId);
+      if (hotel?.lat && hotel?.lng) {
+        routeOrigin = { lat: hotel.lat, lng: hotel.lng };
+      }
+    }
+    if (!routeOrigin && night?.is_locked && night.coordinates) {
+      routeOrigin = night.coordinates;
+    }
+    if (!routeOrigin && state.activeTown) {
+      const activeTownObj = TOWNS.find(t => t.id === state.activeTown);
+      if (activeTownObj?.coords) {
+        routeOrigin = activeTownObj.coords;
+      }
+    }
+
+    if (routeOrigin && dayPois.length > 0) {
+      drawRoute(routeOrigin, dayPois[0].coords);
     }
 
     // ── Town dots (small, context only) ──────────────────────────
@@ -147,7 +167,7 @@ export default function MapView({ activeDay, mapFocus }) {
 
   if (!HAS_API_KEY) {
     return (
-      <div className="map-container">
+      <div className={`map-container ${className}`}>
         <div className="map-no-key">
           <div className="icon">🗺️</div>
           <h3>Google Maps API raktas</h3>
@@ -157,5 +177,5 @@ export default function MapView({ activeDay, mapFocus }) {
     );
   }
 
-  return <div className="map-container"><div ref={containerRef} className="map-el" /></div>;
+  return <div className={`map-container ${className}`}><div ref={containerRef} className="map-el" /></div>;
 }

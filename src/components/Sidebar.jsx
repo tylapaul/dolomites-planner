@@ -68,7 +68,15 @@ function TownSelector() {
             className={`town-card ${state.activeTown === t.id ? 'selected' : ''}`}
             onClick={() => dispatch({ type: 'SET_ACTIVE_TOWN', payload: t.id })}
           >
-            <div><div className="town-name">{t.name}</div><div className="town-tag">{t.tag}</div></div>
+            <div>
+              <div className="town-name">{t.name}</div>
+              <div className="town-tag">{t.tag}</div>
+              {t.bestDays && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--gold-light)', marginTop: 3, fontWeight: 500 }}>
+                  📅 Patogiausia: {t.bestDays}
+                </div>
+              )}
+            </div>
             <span className="town-check">✓</span>
           </div>
         ))}
@@ -346,7 +354,7 @@ function ExportButton({ transport }) {
 }
 
 // ── MAIN SIDEBAR ─────────────────────────────────────────────────
-export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo }) {
+export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo, className = '' }) {
   const [transport, setTransport] = useState('car');
   const [tab, setTab] = useState('plan'); // 'plan' | 'hotels'
   const show14 = activeDay === 14;
@@ -355,7 +363,7 @@ export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo }) {
   const show18 = activeDay === 18;
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${className}`}>
 
       {/* Tabs – only for planning days */}
       {showPlanning && (

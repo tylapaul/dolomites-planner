@@ -16,12 +16,16 @@ const INITIAL_NIGHTS = {
 
 // Pre-calculated driving distances: town → POI
 export const ROUTING_DATA = {
-  cortina:  { trecime: { km: 28, min: 40 }, braies: { km: 45, min: 55 }, sorapis: { km: 12, min: 18 }, cinquetorri: { km: 8,  min: 12 } },
-  sanvito:  { trecime: { km: 42, min: 52 }, braies: { km: 58, min: 68 }, sorapis: { km: 18, min: 25 }, cinquetorri: { km: 14, min: 20 } },
-  borca:    { trecime: { km: 45, min: 55 }, braies: { km: 60, min: 70 }, sorapis: { km: 20, min: 28 }, cinquetorri: { km: 16, min: 22 } },
-  tai:      { trecime: { km: 38, min: 50 }, braies: { km: 52, min: 62 }, sorapis: { km: 22, min: 30 }, cinquetorri: { km: 18, min: 25 } },
-  pieve:    { trecime: { km: 40, min: 52 }, braies: { km: 55, min: 65 }, sorapis: { km: 24, min: 32 }, cinquetorri: { km: 20, min: 27 } },
-  roncade:  { trecime: { km: 185, min: 135 }, braies: { km: 190, min: 140 }, sorapis: { km: 160, min: 120 }, cinquetorri: { km: 170, min: 125 } },
+  cortina:    { trecime: { km: 28, min: 40 }, braies: { km: 45, min: 55 }, sorapis: { km: 12, min: 18 }, cinquetorri: { km: 8,  min: 12 } },
+  misurina:   { trecime: { km: 7,  min: 15 }, braies: { km: 34, min: 40 }, sorapis: { km: 8,  min: 10 }, cinquetorri: { km: 22, min: 30 } },
+  dobbiaco:   { trecime: { km: 30, min: 35 }, braies: { km: 16, min: 20 }, sorapis: { km: 26, min: 30 }, cinquetorri: { km: 38, min: 45 } },
+  villabassa: { trecime: { km: 34, min: 40 }, braies: { km: 12, min: 15 }, sorapis: { km: 30, min: 35 }, cinquetorri: { km: 42, min: 50 } },
+  sanvito:    { trecime: { km: 42, min: 52 }, braies: { km: 58, min: 68 }, sorapis: { km: 18, min: 25 }, cinquetorri: { km: 14, min: 20 } },
+  vodo:       { trecime: { km: 50, min: 60 }, braies: { km: 66, min: 75 }, sorapis: { km: 26, min: 35 }, cinquetorri: { km: 22, min: 30 } },
+  borca:      { trecime: { km: 45, min: 55 }, braies: { km: 60, min: 70 }, sorapis: { km: 20, min: 28 }, cinquetorri: { km: 16, min: 22 } },
+  tai:        { trecime: { km: 38, min: 50 }, braies: { km: 52, min: 62 }, sorapis: { km: 22, min: 30 }, cinquetorri: { km: 18, min: 25 } },
+  pieve:      { trecime: { km: 40, min: 52 }, braies: { km: 55, min: 65 }, sorapis: { km: 24, min: 32 }, cinquetorri: { km: 20, min: 27 } },
+  roncade:    { trecime: { km: 185, min: 135 }, braies: { km: 190, min: 140 }, sorapis: { km: 160, min: 120 }, cinquetorri: { km: 170, min: 125 } },
 };
 
 export function getRoutingData(townId, poiId) {
