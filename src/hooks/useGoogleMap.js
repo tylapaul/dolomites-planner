@@ -109,5 +109,6 @@ export function useGoogleMap(containerRef, initialCenter) {
     polylineRef.current = dr;
   }, []);
 
-  return { map: mapRef.current, ready, clearMarkers, addMarker, panTo, drawRoute };
+  const getMap = () => mapRef.current;
+  return { map: mapRef.current, getMap, ready, clearMarkers, addMarker, panTo, drawRoute };
 }
