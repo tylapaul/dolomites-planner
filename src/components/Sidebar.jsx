@@ -360,7 +360,7 @@ export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo }) {
       {/* Tabs – only for planning days */}
       {showPlanning && (
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-          {[['plan', '📅 Planas'], ['hotels', '🏨 Mano viešbučiai']].map(([id, label]) => (
+          {[['hotels', '🏨 Mano viešbučiai'], ['plan', '📅 Planas']].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)}
               style={{
                 flex: 1, background: 'none', border: 'none', padding: '10px 0',
