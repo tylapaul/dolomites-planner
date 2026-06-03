@@ -589,3 +589,23 @@ input:focus {
 }
 select:focus { outline: none; border-color: var(--gold) !important; }
 select option { background: #1a2540; color: var(--text); }
+
+/* ── TABS ── */
+.sidebar > div:first-child button:hover {
+  color: var(--gold-light);
+  background: var(--gold-dim);
+}
+
+/* ── MY HOTELS textarea ── */
+textarea {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  width: 100%;
+}
+textarea::placeholder { color: var(--text-dim); }
+textarea:focus { outline: none; border-color: var(--gold); }

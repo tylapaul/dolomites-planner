@@ -338,3 +338,63 @@ export const generateDayPlans = (selectedTown) => {
     },
   ];
 };
+
+// POI per day mapping – single source of truth
+export const DAY_POI_MAP = {
+  14: {
+    pois: [],
+    extraMarkers: [
+      { id: 'roncade', name: 'Castello di Roncade', emoji: '🏰', coords: { lat: 45.6276, lng: 12.3766 }, color: '#52a879', info: 'Pirmoji naktis · 06.14–06.15' },
+      { id: 'ecovia', name: 'Ecovia / TSF oro uostas', emoji: '🚗', coords: { lat: 45.6484, lng: 12.1939 }, color: '#c9a84c', info: 'Auto paėmimas 14:30 · Via Noalese 63E' },
+    ],
+    center: { lat: 45.64, lng: 12.28 },
+    zoom: 11,
+  },
+  15: {
+    pois: ['braies'],
+    extraMarkers: [],
+    center: { lat: 46.7001, lng: 12.085 },
+    zoom: 12,
+  },
+  16: {
+    pois: ['trecime'],
+    extraMarkers: [],
+    center: { lat: 46.6124, lng: 12.2964 },
+    zoom: 12,
+  },
+  17: {
+    pois: ['cinquetorri'],
+    extraMarkers: [
+      { id: 'fiori', name: 'Bar Pasticceria Fiori', emoji: '☕', coords: { lat: 46.4514, lng: 12.1928 }, color: '#e88ea0', info: 'Brunch · San Vito di Cadore' },
+    ],
+    center: { lat: 46.49, lng: 12.11 },
+    zoom: 11,
+  },
+  18: {
+    pois: ['sorapis'],
+    extraMarkers: [
+      { id: 'tsf', name: 'TSF – Trevizo oro uostas', emoji: '✈️', coords: { lat: 45.6484, lng: 12.1939 }, color: '#c9a84c', info: 'Ecovia grąžinimas 18:30 · Skrydis 20:40' },
+    ],
+    center: { lat: 46.5566, lng: 12.1846 },
+    zoom: 11,
+  },
+};
+
+// Haversine distance calculator (straight line * road factor)
+export function calcDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  const straight = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const road = straight * 1.45; // mountain road factor
+  const min = Math.round(road / 45 * 60); // ~45km/h mountain avg
+  return { km: Math.round(road * 10) / 10, min };
+}
+
+export function formatDuration(min) {
+  if (min < 60) return `${min} min.`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m > 0 ? `${h} val. ${m} min.` : `${h} val.`;
+}
