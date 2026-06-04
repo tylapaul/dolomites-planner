@@ -1,5 +1,7 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { NIGHT_ONE } from '../data/tripData.js';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db, isFirebaseEnabled } from '../firebase.js';
 
 const TripContext = createContext(null);
 
@@ -42,6 +44,8 @@ export function calcDepartureTime(arrivalTarget, travelMinutes) {
 
 function reducer(state, action) {
   switch (action.type) {
+    case 'SYNC_STATE':
+      return { ...state, ...action.payload };
     case 'LOCK_NIGHTS': {
       const { accommodation } = action.payload;
       const newNights = { ...state.nights };
@@ -112,8 +116,68 @@ export function TripProvider({ children }) {
     return init;
   });
 
+  const stateRef = useRef(state);
+  const isRemoteUpdateRef = useRef(false);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // Firestore real-time snapshot subscription
+  useEffect(() => {
+    if (!isFirebaseEnabled || !db) return;
+    const docRef = doc(db, 'trips', 'dolomites-trip');
+
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        if (docSnap.metadata.hasPendingWrites) return;
+        const data = docSnap.data();
+        const currentLocalState = stateRef.current;
+
+        const isDifferent = JSON.stringify(data.nights) !== JSON.stringify(currentLocalState.nights) ||
+                            data.activeTown !== currentLocalState.activeTown ||
+                            data.transport !== currentLocalState.transport ||
+                            JSON.stringify(data.myHotels) !== JSON.stringify(currentLocalState.myHotels) ||
+                            data.selectedHotelId !== currentLocalState.selectedHotelId;
+
+        if (isDifferent) {
+          isRemoteUpdateRef.current = true;
+          dispatch({ type: 'SYNC_STATE', payload: data });
+        }
+      } else {
+        const currentLocalState = stateRef.current;
+        setDoc(docRef, {
+          nights: currentLocalState.nights,
+          activeTown: currentLocalState.activeTown,
+          transport: currentLocalState.transport,
+          myHotels: currentLocalState.myHotels,
+          selectedHotelId: currentLocalState.selectedHotelId,
+        }).catch(err => console.error('Nepavyko sukurti pradinio dokumento Firebase:', err));
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Save changes locally and to Firestore
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+
+    if (isFirebaseEnabled && db) {
+      if (isRemoteUpdateRef.current) {
+        isRemoteUpdateRef.current = false;
+        return;
+      }
+
+      const docRef = doc(db, 'trips', 'dolomites-trip');
+      setDoc(docRef, {
+        nights: state.nights,
+        activeTown: state.activeTown,
+        transport: state.transport,
+        myHotels: state.myHotels,
+        selectedHotelId: state.selectedHotelId,
+      }).catch(err => console.error('Klaida išsaugant būseną į Firebase:', err));
+    }
   }, [state]);
 
   return <TripContext.Provider value={{ state, dispatch }}>{children}</TripContext.Provider>;
