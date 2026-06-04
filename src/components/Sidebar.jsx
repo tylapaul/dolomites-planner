@@ -355,6 +355,7 @@ function ExportButton({ transport }) {
 
 // ── MAIN SIDEBAR ─────────────────────────────────────────────────
 export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo, className = '' }) {
+  const { state } = useTripContext();
   const [transport, setTransport] = useState('car');
   const [tab, setTab] = useState('plan'); // 'plan' | 'hotels'
   const show14 = activeDay === 14;
@@ -400,27 +401,55 @@ export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo, cla
           <MyHotels activeDay={activeDay} />
         )}
 
-        {show18 && (
-          <div>
-            <div className="castle-card" style={{ borderColor: 'rgba(201,168,76,0.3)' }}>
-              <div className="castle-name">✈️ Išvykimo diena</div>
-              <div className="castle-desc">Grąžinimas automobilio ir skrydis atgal.</div>
-            </div>
-            {[
-              { time: '09:00', icon: '🌄', text: 'Paskutiniai pusryčiai Dolomituose' },
-              { time: '10:00', icon: '🏨', text: 'Išsiregistravimas' },
-              { time: '10:30', icon: '🚗', text: 'Išvykimas į Trevizo / Veneciją (~2.5 val.)' },
-              { time: '13:00', icon: '🚂', text: '2 asm. → Venezia Mestre' },
-              { time: '17:30', icon: '🚗', text: '2 asm. → TSF oro uostas' },
-              { time: '18:30', icon: '🚗', text: 'Automobilio grąžinimas Ecovia · #734670081' },
-              { time: '20:40', icon: '✈️', text: 'Skrydis atgal iš TSF' },
-            ].map((e, i) => (
-              <div key={i} className="event-row">
-                <span className="event-time">{e.time}</span><span className="event-icon">{e.icon}</span><span className="event-text">{e.text}</span>
+        {show18 && (() => {
+          const night = state.nights['06.15'];
+          const townId = night?.accommodation_id || state.activeTown;
+          const plans = townId ? generateDayPlans(townId) : null;
+          const plan = plans?.find(p => p.day === 18);
+          const events = plan?.events || [
+            { time: '07:30', icon: '🌄', text: 'Ankstyvi pusryčiai, išsiregistravimas' },
+            { time: '08:30', icon: '🚗', text: 'Išvykimas link Passo Tre Croci (Sorapis žygio pradžia)' },
+            { time: '09:00–13:30', icon: '🥾', text: 'Žygis į Lago di Sorapis (turkio ežeras aukštai kalnuose)' },
+            { time: '14:00', icon: '🚗', text: 'Išvykimas link Trevizo / Venecijos' },
+            { time: '16:30', icon: '🚂', text: '2 asm. → Venezia Mestre (Venecijos pratęsimas)' },
+            { time: '18:30', icon: '🚗', text: 'Automobilio grąžinimas Ecovia · #734670081' },
+            { time: '20:40', icon: '✈️', text: 'Skrydis atgal iš TSF (2 asm.)' },
+          ];
+
+          return (
+            <div>
+              <div className="castle-card" style={{ borderColor: 'rgba(201,168,76,0.3)' }}>
+                <div className="castle-name">✈️ Išvykimo diena & žygis 🥾</div>
+                <div className="castle-desc">Paskutinė diena Dolomituose: žygis į Lago di Sorapis ir kelionė atgal.</div>
               </div>
-            ))}
-          </div>
-        )}
+
+              <RoutingEngine day={18} />
+
+              <div className="events-list">
+                {events.map((e, i) => (
+                  <div key={i} className="event-row">
+                    <span className="event-time">{e.time}</span><span className="event-icon">{e.icon}</span><span className="event-text">{e.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button className="export-btn"
+                style={{ background: 'var(--bg3)', color: 'var(--gold)', border: '1px solid var(--border)', marginTop: 12 }}
+                onClick={() => onFlyTo({ lat: 46.5566, lng: 12.1846 })}>
+                🗺️ Rodyti žemėlapyje → Lago di Sorapis
+              </button>
+
+              {night?.is_locked && (
+                <a href={`https://www.google.com/maps/dir/${encodeURIComponent(night.accommodation_name + ', Italy')}/Passo+Tre+Croci/Treviso+Airport+(TSF)`}
+                  target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                  <button className="export-btn" style={{ marginTop: 8 }}>
+                    🗺️ Eksportuoti maršrutą į Google Maps
+                  </button>
+                </a>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </aside>
   );
