@@ -38,6 +38,18 @@ export const NIGHT_ONE = {
   distance_from_tsf: '~25 min. nuo TSF',
 };
 
+export const VENICE_ACCOMMODATION = {
+  id: 'basalto_mestre',
+  name: 'BASALTO Venice Mestre Apartments',
+  emoji: '🏨',
+  dates: '06.18–06.20',
+  coords: { lat: 45.4947, lng: 12.2393 },
+  address: '60 Via Francesco Scipione Fapanni, Mestre, Italy, 30174',
+  bookingNumber: '5489392832',
+  description: '2 asmenims liekantiems po kelionės Venecijoje',
+  fixed: true,
+};
+
 export const TOWNS = [
   {
     id: 'cortina',
@@ -360,13 +372,14 @@ export const generateDayPlans = (selectedTown) => {
         { time: '08:30', icon: '🚗', text: 'Išvykimas link Passo Tre Croci (Sorapis žygio pradžia)' },
         { time: '09:00–13:30', icon: '🥾', text: 'Žygis į Lago di Sorapis (turkio ežeras aukštai kalnuose)' },
         { time: '14:00', icon: '🚗', text: 'Išvykimas link Trevizo / Venecijos' },
-        { time: '16:30', icon: '🚂', text: '2 asm. → Venezia Mestre (Venecijos pratęsimas)' },
+        { time: '16:30', icon: '🚂', text: '2 asm. → Venezia Mestre stotis' },
+        { time: '17:00', icon: '🏨', text: 'Įsiregistravimas į BASALTO Venice Mestre Apartments (2 asm.)' },
         { time: '18:30', icon: '🚗', text: 'Automobilio grąžinimas Ecovia · #734670081' },
         { time: '20:40', icon: '✈️', text: 'Skrydis atgal iš TSF (2 asm.)' },
       ],
       poi: POIS.find((p) => p.id === 'sorapis'),
       parking: POIS.find((p) => p.id === 'sorapis').parking,
-      overnight: null,
+      overnight: VENICE_ACCOMMODATION,
     },
   ];
 };
@@ -406,6 +419,7 @@ export const DAY_POI_MAP = {
     pois: ['sorapis'],
     extraMarkers: [
       { id: 'tsf', name: 'TSF – Trevizo oro uostas', emoji: '✈️', coords: { lat: 45.6484, lng: 12.1939 }, color: '#c9a84c', info: 'Ecovia grąžinimas 18:30 · Skrydis 20:40' },
+      { id: 'basalto', name: 'BASALTO Venice Mestre', emoji: '🏨', coords: { lat: 45.4947, lng: 12.2393 }, color: '#52a879', info: 'Įsiregistravimas 17:00 · 2 asm.' },
     ],
     center: { lat: 46.5566, lng: 12.1846 },
     zoom: 11,
