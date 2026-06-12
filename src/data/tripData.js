@@ -197,6 +197,20 @@ export const POIS = [
     officialUrl: 'https://www.dolomiti.org/en/cortina/experiences/cinque-torri/',
     wikiloc: 'https://www.wikiloc.com/hiking-trails/cinque-torri-cortina-dampezzo',
   },
+  {
+    id: 'mexicocity',
+    name: 'Ristorante Pizzeria Mexico City',
+    shortName: 'Mexico City',
+    emoji: '🍕',
+    coords: { lat: 46.73889, lng: 12.16833 },
+    parking: { cost: 'Nemokamas', coords: { lat: 46.73889, lng: 12.16833 }, rule: 'Nemokama aikštelė prie restorano', urgent: false },
+    difficulty: 'Restoranas', duration: '1–2 val.', trailLength: '—',
+    elevation: '1154 m', elevationGain: '—', recommendedDay: 15,
+    description: 'Populiarus restoranas Villabassa miestelyje, siūlantis itališką picą iš malkinės krosnies bei meksikietiškus patiekalus.',
+    highlights: ['Picos iš malkinės krosnies', 'Meksikietiški patiekalai', 'Erdvi automobilių stovėjimo aikštelė'],
+    officialUrl: 'https://mexico-city.eu/',
+    wikiloc: 'https://maps.app.goo.gl/tZD4UrifeKZBQ7YFA',
+  },
 ]
 
 export const RESTAURANTS = {
@@ -396,7 +410,7 @@ export const DAY_POI_MAP = {
     zoom: 11,
   },
   15: {
-    pois: ['braies'],
+    pois: ['braies', 'mexicocity'],
     extraMarkers: [],
     center: { lat: 46.7001, lng: 12.085 },
     zoom: 12,

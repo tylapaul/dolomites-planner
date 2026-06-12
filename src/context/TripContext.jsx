@@ -112,12 +112,15 @@ export function TripProvider({ children }) {
         const parsed = JSON.parse(saved);
         return { ...init, ...parsed, nights: { ...parsed.nights, '06.14': INITIAL_NIGHTS['06.14'] } };
       }
-    } catch {}
+    } catch (e) {
+      console.warn('Nepavyko nuskaityti iš localStorage:', e);
+    }
     return init;
   });
 
   const stateRef = useRef(state);
   const isRemoteUpdateRef = useRef(false);
+  const isInitializedRef = useRef(false);
 
   useEffect(() => {
     stateRef.current = state;
@@ -134,15 +137,41 @@ export function TripProvider({ children }) {
         const data = docSnap.data();
         const currentLocalState = stateRef.current;
 
-        const isDifferent = JSON.stringify(data.nights) !== JSON.stringify(currentLocalState.nights) ||
-                            data.activeTown !== currentLocalState.activeTown ||
-                            data.transport !== currentLocalState.transport ||
-                            JSON.stringify(data.myHotels) !== JSON.stringify(currentLocalState.myHotels) ||
-                            data.selectedHotelId !== currentLocalState.selectedHotelId;
+        // Sujungiame vietinius viešbučius su esančiais duomenų bazėje, kad neprarastume PC pridėtų viešbučių
+        const remoteHotels = data.myHotels || [];
+        const localHotels = currentLocalState.myHotels || [];
+        const mergedHotels = [...remoteHotels];
+        let hasNewLocalHotels = false;
+
+        localHotels.forEach(lh => {
+          if (!mergedHotels.some(rh => rh.id === lh.id)) {
+            mergedHotels.push(lh);
+            hasNewLocalHotels = true;
+          }
+        });
+
+        const updatedData = { ...data, myHotels: mergedHotels };
+
+        const isDifferent = !deepEqual(updatedData.nights, currentLocalState.nights) ||
+                            updatedData.activeTown !== currentLocalState.activeTown ||
+                            updatedData.transport !== currentLocalState.transport ||
+                            !deepEqual(updatedData.myHotels, currentLocalState.myHotels) ||
+                            updatedData.selectedHotelId !== currentLocalState.selectedHotelId;
 
         if (isDifferent) {
           isRemoteUpdateRef.current = true;
-          dispatch({ type: 'SYNC_STATE', payload: data });
+          dispatch({ type: 'SYNC_STATE', payload: updatedData });
+        }
+
+        // Jeigu radome naujų vietinių viešbučių iš naršyklės, sinchronizuojame juos atgal į DB
+        if (hasNewLocalHotels) {
+          setDoc(docRef, {
+            nights: updatedData.nights,
+            activeTown: updatedData.activeTown,
+            transport: updatedData.transport,
+            myHotels: updatedData.myHotels,
+            selectedHotelId: updatedData.selectedHotelId,
+          }).catch(err => console.error('Klaida sinchronizuojant vietinius viešbučius į Firebase:', err));
         }
       } else {
         const currentLocalState = stateRef.current;
@@ -154,6 +183,7 @@ export function TripProvider({ children }) {
           selectedHotelId: currentLocalState.selectedHotelId,
         }).catch(err => console.error('Nepavyko sukurti pradinio dokumento Firebase:', err));
       }
+      isInitializedRef.current = true;
     });
 
     return () => unsubscribe();
@@ -161,9 +191,12 @@ export function TripProvider({ children }) {
 
   // Save changes locally and to Firestore
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn('Nepavyko išsaugoti į localStorage:', e); }
 
     if (isFirebaseEnabled && db) {
+      if (!isInitializedRef.current) {
+        return;
+      }
       if (isRemoteUpdateRef.current) {
         isRemoteUpdateRef.current = false;
         return;
@@ -187,4 +220,17 @@ export function useTripContext() {
   const ctx = useContext(TripContext);
   if (!ctx) throw new Error('useTripContext must be used inside TripProvider');
   return ctx;
+}
+
+function deepEqual(a, b) {
+  if (a === b) return true;
+  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (!keysB.includes(key)) return false;
+    if (!deepEqual(a[key], b[key])) return false;
+  }
+  return true;
 }

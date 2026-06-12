@@ -24,7 +24,14 @@ npm run dev
 2. Render.com → New → Static Site → sujunkite repo
 3. Build command: `npm install && npm run build`
 4. Publish directory: `dist`
-5. Environment Variables → `VITE_GOOGLE_MAPS_API_KEY` = jūsų raktas
+5. Environment Variables → Pridėkite šiuos kintamuosius iš `.env` failo (būtina, kad veiktų sinchronizacija telefone):
+   - `VITE_GOOGLE_MAPS_API_KEY`
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_STORAGE_BUCKET`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `VITE_FIREBASE_APP_ID`
 6. Deploy! 🚀
 
 ## Google Maps API raktas

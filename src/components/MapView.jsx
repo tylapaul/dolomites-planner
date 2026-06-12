@@ -106,7 +106,7 @@ export default function MapView({ activeDay, mapFocus, className = '' }) {
 
     // ── Locked hotel ─────────────────────────────────────────────
     const dateKey = `06.${String(activeDay).padStart(2, '0')}`;
-    const night = state.nights[dateKey] || state.nights['06.15'];
+    const night = activeDay === 18 ? state.nights['06.17'] : (state.nights[dateKey] || state.nights['06.15']);
     if (night?.is_locked && night.coordinates) {
       const icon = createSvgMarker('🏨 ' + (night.accommodation_name || '').split(' ').slice(0, 2).join(' '), '#ad1457');
       const m = new window.google.maps.Marker({ position: night.coordinates, map, title: night.accommodation_name, icon, zIndex: 20 });

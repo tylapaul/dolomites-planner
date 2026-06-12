@@ -11,7 +11,7 @@ const DAY_TARGETS = {
 export default function RoutingEngine({ day }) {
   const { state } = useTripContext();
   const dateKey = `06.${String(day).padStart(2, '0')}`;
-  const night = state.nights[dateKey] || state.nights['06.15'];
+  const night = day === 18 ? state.nights['06.17'] : (state.nights[dateKey] || state.nights['06.15']);
   if (!night?.is_locked) return null;
 
   const targets = DAY_TARGETS[day];

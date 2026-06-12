@@ -402,7 +402,7 @@ export default function Sidebar({ strategy, setStrategy, activeDay, onFlyTo, cla
         )}
 
         {show18 && (() => {
-          const night = state.nights['06.15'];
+          const night = state.nights['06.17'] || state.nights['06.15'];
           const townId = night?.accommodation_id || state.activeTown;
           const plans = townId ? generateDayPlans(townId) : null;
           const plan = plans?.find(p => p.day === 18);
