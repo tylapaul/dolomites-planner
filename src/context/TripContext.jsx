@@ -98,7 +98,26 @@ const INITIAL_STATE = {
   nights: INITIAL_NIGHTS,
   activeTown: null,
   transport: 'car',
-  myHotels: [],
+  myHotels: [
+    {
+      id: 'roncade',
+      name: 'Castello di Roncade',
+      address: 'Via Carchidio 2, 31056 Roncade TV, Italy',
+      lat: 45.6276,
+      lng: 12.3766,
+      bookingUrl: 'https://www.castellodironcade.com/',
+      notes: 'Pirmoji naktis · Vyno degustacija'
+    },
+    {
+      id: 'basalto_mestre',
+      name: 'BASALTO Venice Mestre Apartments',
+      address: '60 Via Francesco Scipione Fapanni, 30174 Mestre, Italy',
+      lat: 45.4947,
+      lng: 12.2393,
+      bookingUrl: 'https://www.booking.com/Share-y5SIvs',
+      notes: 'Venecija pratęsimas · Užsakymo Nr. 5489392832'
+    }
+  ],
   selectedHotelId: null,
 };
 
