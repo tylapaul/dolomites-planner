@@ -4,8 +4,8 @@ import { calcDistance, formatDuration, POIS } from '../data/tripData.js';
 const DAY_TARGETS = {
   15: [{ poiId: 'braies',      name: 'Lago di Braies',       targetArrival: '09:00', emoji: '🏞️', urgent: false }],
   16: [{ poiId: 'trecime',     name: 'Tre Cime di Lavaredo', targetArrival: '08:00', emoji: '⛰️', urgent: true  }],
-  17: [{ poiId: 'cinquetorri', name: 'Cinque Torri',          targetArrival: '12:00', emoji: '🗼', urgent: false }],
-  18: [{ poiId: 'sorapis',     name: 'Lago di Sorapis',       targetArrival: '08:30', emoji: '💎', urgent: false }],
+  17: [{ poiId: 'sorapis',     name: 'Lago di Sorapis',       targetArrival: '12:30', emoji: '💎', urgent: false }],
+  18: [{ poiId: 'cinquetorri', name: 'Cinque Torri',          targetArrival: '10:00', emoji: '🗼', urgent: false }],
 };
 
 export default function RoutingEngine({ day }) {
